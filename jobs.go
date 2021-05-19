@@ -12,48 +12,46 @@ import (
 
 type JobsMetrics struct {
 	jobPartition string
-	jobName string
-	jobUser string
-	jobState string // should probably be it's own metric
-	// what about start time?
+	jobName      string
+	jobUser      string
+	jobState     string 
 	jobRunningTime uint64
-	jobNodesCount uint64 // should probably be it's own metric
-	jobNodeList string
+	jobNodesCount  uint64
+	jobNodeList    string
 	// TODO: write nodelist parser!
 	// jobVarNodes []string
 }
 
-func JobsGetMetrics() map[string]*JobsMetrics {
-	return ParseJobsMetrics(JobsData())
+func JobsGetMetrics() map[uint64]*JobsMetrics {
+	return ParseJobsMetrics(JobData())
 }
 
 // ParseNodeMetrics takes the output of squeue with job data
 // It returns a map of metrics per job
 func ParseJobsMetrics(input []byte) map[uint64]*JobsMetrics {
 	jobs := make(map[uint64]*JobsMetrics)
-	lines := strings.split(string(input), "\n")
+	lines := strings.Split(string(input), "\n")
 
 	// Sort and remove all the dublicates from the 'squeue' output
 	sort.Strings(lines)
 	linesUniq := RemoveDuplicates(lines)
 
-	for _, line := range linesUnique[1:] {
+	for _, line := range linesUniq[1:] {
 		job := strings.Fields(line)
-		jobId := job[0]
+		jobId, _ := strconv.ParseUint(job[0], 10, 64)
 
-		jobs[jobId] = &JobsMetrics("", "", "", "", 0, 0, nil)
+		jobs[jobId] = &JobsMetrics{"", "", "", "", 0, 0, ""}
 
-		jobPartition := node[1]
-		jobName := node[2]
-		jobUser := node[3]
-		jobState := node[4]
+		jobPartition := job[1]
+		jobName := job[2]
+		jobUser := job[3]
+		jobState := job[4]
 		// what about start time?
-		// TODO: convert to seconds
-		jobRunningTime, _ := strconv.ParseUint(node[6], 10, 64)
-		jobNodesCount, _ := strconv.ParseUint(node[7], 10, 64)
-		jobNodeList := node[8]
+		jobRunningTime := RunningTimeToSeconds(job[6])
+		jobNodesCount, _ := strconv.ParseUint(job[7], 10, 64)
+		jobNodeList := job[8]
 
-		jobs[jobId].jobPartition = jobPartitiom
+		jobs[jobId].jobPartition = jobPartition
 		jobs[jobId].jobName = jobName
 		jobs[jobId].jobUser = jobUser
 		jobs[jobId].jobState = jobState
