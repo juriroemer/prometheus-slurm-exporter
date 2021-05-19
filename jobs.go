@@ -3,6 +3,7 @@ package main
 import (
 	"log"
 	"os/exec"
+	"regexp"
 	"sort"
 	"strconv"
 	"strings"
@@ -61,6 +62,33 @@ func ParseJobsMetrics(input []byte) map[uint64]*JobsMetrics {
 	}
 
 	return jobs
+}
+
+func RunningTimeToSeconds(input string) uint64 {
+	var seconds uint64
+	const sixty uint64 = 60
+	const twentyfour uint64 = 24
+	raw := regexp.MustCompile("[\\-\\,\\:\\s]+").Split(input, -1)
+
+	var rawInts = []uint64{}
+	for _, i := range raw {
+		j, err := strconv.ParseUint(i, 10, 64)
+		if err != nil {
+			panic(err)
+		}
+		rawInts = append(rawInts, j)
+	}
+
+	switch timeLength := len(rawInts); {
+	case timeLength == 2:
+		seconds = rawInts[0]*sixty + rawInts[1]
+	case timeLength == 3:
+		seconds = rawInts[0]*sixty + rawInts[1]*sixty + rawInts[2]
+	case timeLength == 4:
+		seconds = rawInts[0]*twentyfour*sixty*sixty + rawInts[1]*sixty*sixty + rawInts[2]*sixty + rawInts[3]
+	}
+
+	return seconds
 }
 
 func JobData() []byte {
