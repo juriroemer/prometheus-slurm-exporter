@@ -103,23 +103,31 @@ func JobData() []byte {
 
 type JobsCollector struct {
 	jobRunningTime *prometheus.Desc
+	jobState       *prometheus.Desc
+	jobNodesCount  *prometheus.Desc
 }
 
 func NewJobsCollector() *JobsCollector {
-	labels := []string{"partition", "name", "user", "state", "nodescount", "nodeslist"}
+	labels := []string{"partition", "name", "user" /*"state", "nodescount",*/, "nodeslist"}
 
 	return &JobsCollector{
-		jobRunningTime: prometheus.NewDesc("job_running_time", "Time a job running has spent run until now", labels, nil)
+		jobRunningTime: prometheus.NewDesc("job_runningtime", "Time a job running has spent run until now", labels, nil),
+		jobState:       prometheus.NewDesc("job_state", "The State of a job", labels, nil),
+		jobNodesCount:  prometheus.NewDesc("job_nodescount", "Number of nodes a job has allocated", labels, nil),
 	}
 }
 
 func (jc *JobsCollector) Describe(ch chan<- *prometheus.Desc) {
 	ch <- jc.jobRunningTime
+	ch <- jc.jobState
+	ch <- jc.jobNodesCount
 }
 
-func (jc *JobsCollector) Collect(ch chan<- prometheus.Metric){
+func (jc *JobsCollector) Collect(ch chan<- prometheus.Metric) {
 	jobs := JobsGetMetrics()
 	for job := range jobs {
-		ch <- prometheus.MustNewConstMetric(jc.jobRunningTime, prometheus.CounterValue, float64(jobs[job].jobRunningTime), job, jobs[job].jobPartition, jobs[job].jobName, jobs[job].jobUser, jobs[job].jobState, jobs[job].jobNodesCount, jobs[job].jobNodeList)
+		ch <- prometheus.MustNewConstMetric(jc.jobRunningTime, prometheus.CounterValue, float64(jobs[job].jobRunningTime), job, jobs[job].jobPartition, jobs[job].jobName, jobs[job].jobUser, jobs[job].jobNodeList)
+		ch <- prometheus.MustNewConstMetric(jc.jobState, prometheus.CounterValue, float64(jobs[job].jobRunningTime), job, jobs[job].jobPartition, jobs[job].jobName, jobs[job].jobUser, jobs[job].jobNodeList)
+		ch <- prometheus.MustNewConstMetric(jc.jobNodesCount, prometheus.CounterValue, float64(jobs[job].jobRunningTime), job, jobs[job].jobPartition, jobs[job].jobName, jobs[job].jobUser, jobs[job].jobNodeList)
 	}
 }
