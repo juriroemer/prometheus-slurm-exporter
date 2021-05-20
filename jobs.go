@@ -69,7 +69,7 @@ func RunningTimeToSeconds(input string) uint64 {
 	var seconds uint64
 	const sixty uint64 = 60
 	const twentyfour uint64 = 24
-	raw := regexp.MustCompile(`[\\-\\,\\:\\s]+`).Split(input, -1)
+	raw := regexp.MustCompile("[\\-\\,\\:\\s]+").Split(input, -1)
 
 	var rawInts = []uint64{}
 	for _, i := range raw {
