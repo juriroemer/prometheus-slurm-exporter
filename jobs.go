@@ -83,7 +83,7 @@ func RunningTimeToSeconds(input string) uint64 {
 	case timeLength == 2:
 		seconds = rawInts[0]*sixty + rawInts[1]
 	case timeLength == 3:
-		seconds = rawInts[0]*sixty + rawInts[1]*sixty + rawInts[2]
+		seconds = rawInts[0]*sixty*sixty + rawInts[1]*sixty + rawInts[2]
 	case timeLength == 4:
 		seconds = rawInts[0]*twentyfour*sixty*sixty + rawInts[1]*sixty*sixty + rawInts[2]*sixty + rawInts[3]
 	}
