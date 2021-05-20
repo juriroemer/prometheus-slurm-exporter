@@ -111,7 +111,7 @@ func NewJobsCollector() *JobsCollector {
 	labels := []string{"job", "partition", "name", "user" /*"state", "nodescount",*/, "nodeslist"}
 
 	return &JobsCollector{
-		jobRunningTime: prometheus.NewDesc("job_running_time", "Time a running job running has spent run until now", labels, nil),
+		jobRunningTime: prometheus.NewDesc("job_running_sec", "Time a running job running has spent run until now, in seconds", labels, nil),
 		jobNodesCount:  prometheus.NewDesc("job_running_nodescount", "Number of nodes a running job has allocated", labels, nil),
 	}
 }
