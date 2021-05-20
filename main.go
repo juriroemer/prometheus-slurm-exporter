@@ -34,6 +34,7 @@ func init() {
 	prometheus.MustRegister(NewSchedulerCollector())      // from scheduler.go
 	prometheus.MustRegister(NewFairShareCollector())      // from sshare.go
 	prometheus.MustRegister(NewUsersCollector())          // from users.go
+	prometheus.MustRegister(NewJobsCollector())           // from jobs.go
 }
 
 var listenAddress = flag.String(
