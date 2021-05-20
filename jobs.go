@@ -93,7 +93,7 @@ func RunningTimeToSeconds(input string) uint64 {
 
 func JobData() []byte {
 	//make this cleaner?
-	cmd := exec.Command("squeue", "--state=R", "-o", "%i", "%P", "%j", "%u", "%T", "%S", "%M", "%D", "%N")
+	cmd := exec.Command("squeue", "--states=R", "-o", "%i%P%j%u%T%S%M%D%N")
 	out, err := cmd.Output()
 	if err != nil {
 		log.Fatal(err)
