@@ -12,10 +12,10 @@ import (
 )
 
 type JobsMetrics struct {
-	jobPartition string
-	jobName      string
-	jobUser      string
-	jobState     string 
+	jobPartition   string
+	jobName        string
+	jobUser        string
+	jobState       string
 	jobRunningTime uint64
 	jobNodesCount  uint64
 	jobNodeList    string
@@ -23,14 +23,14 @@ type JobsMetrics struct {
 	// jobVarNodes []string
 }
 
-func JobsGetMetrics() map[uint64]*JobsMetrics {
+func JobsGetMetrics() map[string]*JobsMetrics {
 	return ParseJobsMetrics(JobData())
 }
 
 // ParseNodeMetrics takes the output of squeue with job data
 // It returns a map of metrics per job
-func ParseJobsMetrics(input []byte) map[uint64]*JobsMetrics {
-	jobs := make(map[uint64]*JobsMetrics)
+func ParseJobsMetrics(input []byte) map[string]*JobsMetrics {
+	jobs := make(map[string]*JobsMetrics)
 	lines := strings.Split(string(input), "\n")
 
 	// Sort and remove all the dublicates from the 'squeue' output
@@ -39,7 +39,7 @@ func ParseJobsMetrics(input []byte) map[uint64]*JobsMetrics {
 
 	for _, line := range linesUniq[1:] {
 		job := strings.Fields(line)
-		jobId, _ := strconv.ParseUint(job[0], 10, 64)
+		jobId := job[0]
 
 		jobs[jobId] = &JobsMetrics{"", "", "", "", 0, 0, ""}
 
@@ -68,7 +68,7 @@ func RunningTimeToSeconds(input string) uint64 {
 	var seconds uint64
 	const sixty uint64 = 60
 	const twentyfour uint64 = 24
-	raw := regexp.MustCompile("[\\-\\,\\:\\s]+").Split(input, -1)
+	raw := regexp.MustCompile(`[\\-\\,\\:\\s]+`).Split(input, -1)
 
 	var rawInts = []uint64{}
 	for _, i := range raw {
@@ -107,7 +107,7 @@ type JobsCollector struct {
 }
 
 func NewJobsCollector() *JobsCollector {
-	labels := []string{"partition", "name", "user" /*"state", "nodescount",*/, "nodeslist"}
+	labels := []string{"job", "partition", "name", "user" /*"state", "nodescount",*/, "nodeslist"}
 
 	return &JobsCollector{
 		jobRunningTime: prometheus.NewDesc("job_running_time", "Time a running job running has spent run until now", labels, nil),
@@ -123,7 +123,7 @@ func (jc *JobsCollector) Describe(ch chan<- *prometheus.Desc) {
 func (jc *JobsCollector) Collect(ch chan<- prometheus.Metric) {
 	jobs := JobsGetMetrics()
 	for job := range jobs {
-		ch <- prometheus.MustNewConstMetric(jc.jobRunningTime, prometheus.CounterValue, float64(jobs[job].jobRunningTime), jobs[job].jobPartition, jobs[job].jobName, jobs[job].jobUser, jobs[job].jobNodeList)
-		ch <- prometheus.MustNewConstMetric(jc.jobNodesCount, prometheus.CounterValue, float64(jobs[job].jobRunningTime), jobs[job].jobPartition, jobs[job].jobName, jobs[job].jobUser, jobs[job].jobNodeList)
+		ch <- prometheus.MustNewConstMetric(jc.jobRunningTime, prometheus.CounterValue, float64(jobs[job].jobRunningTime), job, jobs[job].jobPartition, jobs[job].jobName, jobs[job].jobUser, jobs[job].jobNodeList)
+		ch <- prometheus.MustNewConstMetric(jc.jobNodesCount, prometheus.CounterValue, float64(jobs[job].jobRunningTime), job, jobs[job].jobPartition, jobs[job].jobName, jobs[job].jobUser, jobs[job].jobNodeList)
 	}
 }
