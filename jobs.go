@@ -37,8 +37,8 @@ func ParseJobsMetrics(input []byte) map[string]*JobsMetrics {
 	sort.Strings(lines)
 	linesUniq := RemoveDuplicates(lines)
 
-	for _, line := range linesUniq[1:] {
-		job := strings.Split(line, ",")
+	for _, line := range linesUniq {
+		job := strings.Split(line, "|")
 
 		jobId := job[0]
 
@@ -94,7 +94,7 @@ func RunningTimeToSeconds(input string) uint64 {
 
 func JobData() []byte {
 	//make this cleaner?
-	cmd := exec.Command("squeue", "--states=R", "-o", "%i,%P,%j,%u,%T,%S,%M,%D,%N")
+	cmd := exec.Command("squeue", "-h",  "--states=R", "-o", "%i|%P|%j|%u|%T|%S|%M|%D|%N")
 	out, err := cmd.Output()
 	if err != nil {
 		log.Fatal(err)
