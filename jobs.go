@@ -12,15 +12,14 @@ import (
 )
 
 type JobsMetrics struct {
-	jobPartition   string
-	jobName        string
-	jobUser        string
-	jobState       string
-	jobRunningTime uint64
-	jobNodesCount  uint64
-	jobNodeList    string
-	// TODO: write nodelist parser!
-	// jobVarNodes []string
+	jobPartition        string
+	jobName             string
+	jobUser             string
+	jobState            string
+	jobRunningTime      uint64
+	jobNodesCount       uint64
+	jobNodeList         string
+	jobNodeListExpanded string
 }
 
 func JobsGetMetrics() map[string]*JobsMetrics {
@@ -39,31 +38,21 @@ func ParseJobsMetrics(input []byte) map[string]*JobsMetrics {
 
 	for _, line := range linesUniq {
 		job := strings.Split(line, "|")
-
 		jobId := job[0]
 
-		jobs[jobId] = &JobsMetrics{"", "", "", "", 0, 0, ""}
-
-		jobPartition := job[1]
-		jobName := job[2]
-		jobUser := job[3]
-		jobState := job[4]
-		// what about start time?
-		jobRunningTime := RunningTimeToSeconds(job[6])
-		jobNodesCount, _ := strconv.ParseUint(job[7], 10, 64)
-		jobNodeList := job[8]
-
-		jobs[jobId].jobPartition = jobPartition
-		jobs[jobId].jobName = jobName
-		jobs[jobId].jobUser = jobUser
-		jobs[jobId].jobState = jobState
-		jobs[jobId].jobRunningTime = jobRunningTime
-		jobs[jobId].jobNodesCount = jobNodesCount
-		jobs[jobId].jobNodeList = jobNodeList
+		jobs[jobId] = &JobsMetrics{"", "", "", "", 0, 0, "", ""}
+		jobs[jobId].jobPartition = job[1]
+		jobs[jobId].jobName = job[2]
+		jobs[jobId].jobUser = job[3]
+		jobs[jobId].jobState = job[4]
+		jobs[jobId].jobRunningTime = RunningTimeToSeconds(job[6])
+		jobs[jobId].jobNodesCount, _ = strconv.ParseUint(job[7], 10, 64)
+		jobs[jobId].jobNodeList = job[8]
 	}
 
 	return jobs
 }
+
 
 func RunningTimeToSeconds(input string) uint64 {
 	var seconds uint64
@@ -94,11 +83,12 @@ func RunningTimeToSeconds(input string) uint64 {
 
 func JobData() []byte {
 	//make this cleaner?
-	cmd := exec.Command("squeue", "-h",  "--states=R", "-o", "%i|%P|%j|%u|%T|%S|%M|%D|%N")
+	cmd := exec.Command("squeue", "-h", "--states=R", "-o", "%i|%P|%j|%u|%T|%S|%M|%D|%N")
 	out, err := cmd.Output()
 	if err != nil {
 		log.Fatal(err)
 	}
+
 	return out
 }
 
