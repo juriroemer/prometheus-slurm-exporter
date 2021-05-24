@@ -48,6 +48,7 @@ func ParseJobsMetrics(input []byte) map[string]*JobsMetrics {
 		jobs[jobId].jobRunningTime = RunningTimeToSeconds(job[6])
 		jobs[jobId].jobNodesCount, _ = strconv.ParseUint(job[7], 10, 64)
 		jobs[jobId].jobNodeList = job[8]
+		jobs[jobId].jobNodeListExpanded = strings.Join(expandNodeList(job[8]), ", ")
 	}
 
 	return jobs
@@ -136,7 +137,7 @@ type JobsCollector struct {
 }
 
 func NewJobsCollector() *JobsCollector {
-	labels := []string{"job", "partition", "name", "user" /*"state", "nodescount",*/, "nodeslist"}
+	labels := []string{"job", "partition", "name", "user", "nodeslist", "nodelistexpanded"}
 
 	return &JobsCollector{
 		jobRunningTime: prometheus.NewDesc("job_running_sec", "Time a running job running has spent run until now, in seconds", labels, nil),
@@ -152,7 +153,7 @@ func (jc *JobsCollector) Describe(ch chan<- *prometheus.Desc) {
 func (jc *JobsCollector) Collect(ch chan<- prometheus.Metric) {
 	jobs := JobsGetMetrics()
 	for job := range jobs {
-		ch <- prometheus.MustNewConstMetric(jc.jobRunningTime, prometheus.CounterValue, float64(jobs[job].jobRunningTime), job, jobs[job].jobPartition, jobs[job].jobName, jobs[job].jobUser, jobs[job].jobNodeList)
-		ch <- prometheus.MustNewConstMetric(jc.jobNodesCount, prometheus.CounterValue, float64(jobs[job].jobNodesCount), job, jobs[job].jobPartition, jobs[job].jobName, jobs[job].jobUser, jobs[job].jobNodeList)
+		ch <- prometheus.MustNewConstMetric(jc.jobRunningTime, prometheus.CounterValue, float64(jobs[job].jobRunningTime), job, jobs[job].jobPartition, jobs[job].jobName, jobs[job].jobUser, jobs[job].jobNodeList, jobs[job].jobNodeListExpanded)
+		ch <- prometheus.MustNewConstMetric(jc.jobNodesCount, prometheus.CounterValue, float64(jobs[job].jobNodesCount), job, jobs[job].jobPartition, jobs[job].jobName, jobs[job].jobUser, jobs[job].jobNodeList, jobs[job].jobNodeListExpanded)
 	}
 }
