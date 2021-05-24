@@ -53,6 +53,44 @@ func ParseJobsMetrics(input []byte) map[string]*JobsMetrics {
 	return jobs
 }
 
+func expandNodeList(collapsed string) []string {
+	var output []string
+	var splitRangesRegex = regexp.MustCompile(`[-\w.]+\[.*?\]|[-\w.]+`)
+	var splitRanges = splitRangesRegex.FindAllString(collapsed, -1)
+
+	for _, n := range splitRanges {
+		if regexp.MustCompile(`\[`).MatchString(n) {
+			splitted := regexp.MustCompile(`(?P<prefix>.*)\[(?P<postfix>.*)\]`).FindStringSubmatch(n)
+			pre := splitted[1]
+			post := splitted[2]
+			x := strings.Split(post, ",")
+			var temp []string
+
+			for _, y := range x {
+				if !strings.Contains(y, "-") {
+					temp = append(temp, pre+y)
+				} else {
+					last := strings.Split(y, "-")[1]
+					first := strings.Split(y, "-")[0]
+					lastIterator, _ := strconv.Atoi(last)
+					for firstIterator, _ := strconv.Atoi(first); firstIterator < lastIterator+1; firstIterator++ {
+						var lZ string
+						firstIteratorStr := strconv.Itoa(firstIterator)
+						for z := len(firstIteratorStr); z < len(last); z++ {
+							lZ = lZ + "0"
+						}
+						temp = append(temp, pre+lZ+firstIteratorStr)
+					}
+				}
+			}
+			output = append(output, temp...)
+		} else {
+			output = append(output, n)
+		}
+	}
+
+	return output
+}
 
 func RunningTimeToSeconds(input string) uint64 {
 	var seconds uint64
